@@ -1,0 +1,41 @@
+manifestVersion: 1
+name: kdenlive
+description: Kdenlive/MLT — headless video compositing, timeline assembly, and rendering to mp4
+
+instructions: |
+  Kdenlive tools compose and render video headlessly via MLT's `melt` CLI.
+  No GUI is needed — everything runs from MLT XML documents.
+
+  The primary workflow is kdenlive_compose: describe clips (video files, image
+  sequences, color generators), arrange them on tracks with in/out points and
+  transitions, and render the result to mp4. The tool builds valid MLT XML and
+  feeds it to melt.
+
+  For Blender animations: render frames with the blender pack (keepFrames: true),
+  then pass the frames directory to kdenlive_compose as an image sequence clip.
+  melt handles PNG sequences natively.
+
+  After rendering, hand the returned videoPath to the media pack's view_video
+  to show the result.
+
+tools:
+  entry: tools.ts
+
+dependencies:
+  - name: melt
+    install: brew install mlt
+    reason: the MLT render engine — renders all compositions to video
+  - name: ffprobe
+    install: brew install ffmpeg
+    reason: probes media files for duration, resolution, codec info
+
+traits:
+  kdenlive:
+    description: "Video compositing and rendering — assemble clips, transitions, and effects into rendered video"
+    access: readwrite
+    namespaces: [kdenlive]
+    skills: [video-editing]
+  kdenlive-read:
+    description: "Inspect Kdenlive projects and media files without rendering"
+    access: read
+    namespaces: [kdenlive]

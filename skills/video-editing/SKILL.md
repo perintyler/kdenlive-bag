@@ -1,0 +1,108 @@
+---
+name: video-editing
+description: Compose and render videos with Kdenlive/MLT — assemble clips, image sequences, transitions, and effects into rendered mp4. Use when asked to edit video, compose clips, create a montage, or combine Blender renders with other footage.
+context: current
+allowed-tools: Bash, Read, Write
+---
+
+# Video Editing with Kdenlive/MLT
+
+Compose videos by describing tracks, clips, and transitions, then rendering
+with `kdenlive_compose`. Everything runs headlessly via MLT's `melt` engine —
+no GUI needed.
+
+## The loop
+
+1. Probe source media with `kdenlive_probe_media` to get durations and frame counts.
+2. Build a composition with `kdenlive_compose`: define tracks, place clips, add transitions.
+3. Show the result with the media pack's `view_video`.
+
+Iterate at low resolution (960x540) while refining, then render at full res.
+
+## Core concepts
+
+**Tracks** stack bottom-to-top. Track 0 is the base layer; higher tracks
+composite over it. Each track is a sequence of clips and blanks.
+
+**Clips** are media sources: video files, image sequences (glob patterns like
+`/path/frames/f_*.png`), or generators (`color:black`, `color:#FF0000`).
+
+**Blanks** are gaps of silence/transparency between clips, measured in frames.
+
+**Transitions** blend between adjacent tracks over a frame range. Common ones:
+- `luma` — crossfade/dissolve (the most common)
+- `composite` — alpha compositing (for overlays, picture-in-picture)
+- `mix` — audio crossfade
+
+**Filters** apply effects to a track: `brightness`, `volume`, `greyscale`,
+`frei0r.letterb0xed` (letterboxing), etc. Use `kdenlive_list_transitions`
+(type: "filters") to discover what's available.
+
+## Blender + Kdenlive pipeline
+
+Render Blender animations as PNG sequences (`keepFrames: true`), then composite
+them in Kdenlive:
+
+```
+blender_render(name: "intro", ..., keepFrames: true)
+  → framesDir: ~/.barry/blender/intro/frames/
+
+kdenlive_compose(tracks: [{
+  clips: [{
+    type: "clip",
+    source: { resource: "~/.barry/blender/intro/frames/f_*.png", fps: 24 }
+  }]
+}])
+```
+
+Image sequences use glob patterns. Set `fps` on the source to match Blender's
+render fps.
+
+## Frame math
+
+- frames = duration_seconds * fps
+- At 24fps: 1 second = 24 frames, 5 seconds = 120 frames
+- `in` and `out` are 0-based and inclusive: `in: 0, out: 23` = first 24 frames
+
+## Example: two clips with a crossfade
+
+```
+kdenlive_compose({
+  name: "demo",
+  profile: { width: 1920, height: 1080, fps: 24 },
+  tracks: [
+    {
+      clips: [
+        { type: "clip", source: { resource: "/path/clip1.mp4", out: 119 } },
+        { type: "clip", source: { resource: "/path/clip2.mp4", out: 119 } }
+      ]
+    }
+  ]
+})
+```
+
+## Example: overlay with alpha composite
+
+```
+tracks: [
+  // Track 0 (bottom): background
+  { clips: [{ type: "clip", source: { resource: "color:black", out: 119 } }] },
+  // Track 1 (top): foreground with transparency
+  { clips: [{ type: "clip", source: { resource: "/path/overlay.png", out: 119 } }] }
+],
+transitions: [{
+  mltId: "composite",
+  aTrack: 0,
+  bTrack: 1,
+  in: 0,
+  out: 119,
+  properties: { geometry: "0/0:100%x100%" }
+}]
+```
+
+## Tips
+
+- Discover available transitions/filters with `kdenlive_list_transitions`
+- Use `kdenlive_probe_media` before composing to get exact frame counts
+- For existing .kdenlive projects, use `kdenlive_render` instead
+- Generators like `color:black` are useful for backgrounds, blanks, and test clips
