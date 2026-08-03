@@ -11,11 +11,11 @@ instructions: |
   transitions, and render the result to mp4. The tool builds valid MLT XML and
   feeds it to melt.
 
-  For Blender animations: render frames with the blender pack (keepFrames: true),
+  For Blender animations: render frames with the blender block (keepFrames: true),
   then pass the frames directory to kdenlive_compose as an image sequence clip.
   melt handles PNG sequences natively.
 
-  After rendering, hand the returned videoPath to the media pack's view_video
+  After rendering, hand the returned videoPath to the media block's view_video
   to show the result.
 
 tools:
