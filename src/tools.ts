@@ -152,7 +152,7 @@ export const kdenliveRender = defineTool({
   access: "write",
   name: "kdenlive_render",
   description:
-    "Render a .kdenlive or .mlt project file to mp4. For composing new videos from scratch, use kdenlive_compose instead. Returns the mp4 path; pass it to the media pack's view_video.",
+    "Render a .kdenlive or .mlt project file to mp4. For composing new videos from scratch, use kdenlive_compose instead. Returns the mp4 path; pass it to the media bag's view_video.",
   schema: {
     projectFile: z.string().describe("Path to a .kdenlive or .mlt file"),
     outputName: z
@@ -192,7 +192,7 @@ export const kdenliveRender = defineTool({
     return {
       videoPath,
       renderSeconds: Number((renderMs / 1000).toFixed(1)),
-      nextStep: `Show it with the media pack: view_video ${videoPath}`,
+      nextStep: `Show it with the media bag: view_video ${videoPath}`,
     };
   },
 });
@@ -202,7 +202,7 @@ export const kdenliveCompose = defineTool({
   access: "write",
   name: "kdenlive_compose",
   description:
-    "Compose a video from clips, transitions, and filters — the main creative tool. Describe your tracks (video/audio layers), place clips with in/out points, add transitions between tracks, and apply filters. Builds valid MLT XML and renders to mp4. Returns the mp4 path; pass it to the media pack's view_video.",
+    "Compose a video from clips, transitions, and filters — the main creative tool. Describe your tracks (video/audio layers), place clips with in/out points, add transitions between tracks, and apply filters. Builds valid MLT XML and renders to mp4. Returns the mp4 path; pass it to the media bag's view_video.",
   schema: {
     name: z.string().describe("Short name for this composition; used as output directory name"),
     profile: profileSchema.optional().describe("Output profile (default: 1920x1080 @ 24fps)"),
@@ -245,7 +245,7 @@ export const kdenliveCompose = defineTool({
       tracks: tracks.length,
       transitions: transitions?.length ?? 0,
       filters: filters?.length ?? 0,
-      nextStep: `Show it with the media pack: view_video ${videoPath}`,
+      nextStep: `Show it with the media bag: view_video ${videoPath}`,
     };
   },
 });

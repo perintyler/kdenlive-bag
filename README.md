@@ -1,4 +1,4 @@
-# Kdenlive (Barry Pack)
+# Kdenlive (Barry bag)
 
 Headless video compositing, timeline assembly, and rendering to mp4 via MLT.
 
