@@ -4,6 +4,28 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { buildMltXml } from "./mlt.js";
 
+// defineTool types its handler's return as unknown, so annotate the one shape
+// these tests assert against rather than casting at each of the call sites.
+type ProjectInfo = {
+  format: string;
+  profile: { width: number; height: number; fps: number } | null;
+  producers: { id: string; resource: string; length?: number }[];
+  playlists: number;
+  tractors: number;
+  transitions: number;
+  filters: number;
+};
+
+type ComposeResult = {
+  videoPath: string;
+  renderSeconds: number;
+  profile: string;
+  tracks: number;
+  transitions: number;
+  filters: number;
+  nextStep: string;
+};
+
 // Import the helpers indirectly through the tool handlers — the tools
 // re-export what we need to test the parser and probe logic.
 
@@ -31,7 +53,7 @@ describe("kdenliveProjectInfo", () => {
     const tmpFile = join(tmpdir(), `barry-test-${Date.now()}.mlt`);
     writeFileSync(tmpFile, xml);
 
-    const result = await tool.handler({ projectFile: tmpFile });
+    const result = (await tool.handler({ projectFile: tmpFile })) as ProjectInfo;
 
     expect(result.format).toBe("mlt");
     expect(result.profile).toEqual({ width: 1280, height: 720, fps: 30 });
@@ -65,7 +87,7 @@ describe("kdenliveProjectInfo", () => {
     const tmpFile = join(tmpdir(), `barry-test-reorder-${Date.now()}.mlt`);
     writeFileSync(tmpFile, xml);
 
-    const result = await tool.handler({ projectFile: tmpFile });
+    const result = (await tool.handler({ projectFile: tmpFile })) as ProjectInfo;
     expect(result.profile).toEqual({ width: 640, height: 480, fps: 25 });
   });
 
@@ -99,7 +121,7 @@ describe("kdenliveProjectInfo", () => {
     const tmpFile = join(tmpdir(), `barry-test-selfclose-${Date.now()}.mlt`);
     writeFileSync(tmpFile, xml);
 
-    const result = await tool.handler({ projectFile: tmpFile });
+    const result = (await tool.handler({ projectFile: tmpFile })) as ProjectInfo;
     expect(result.transitions).toBe(1);
     expect(result.filters).toBe(1);
   });
@@ -131,7 +153,7 @@ describe("kdenliveProjectInfo", () => {
     const tmpFile = join(tmpdir(), `barry-test-withbody-${Date.now()}.mlt`);
     writeFileSync(tmpFile, xml);
 
-    const result = await tool.handler({ projectFile: tmpFile });
+    const result = (await tool.handler({ projectFile: tmpFile })) as ProjectInfo;
     expect(result.transitions).toBe(1);
     expect(result.filters).toBe(1);
   });
@@ -156,7 +178,7 @@ describe("kdenliveProjectInfo", () => {
     const tmpFile = join(tmpdir(), `barry-test-${Date.now()}.kdenlive`);
     writeFileSync(tmpFile, xml);
 
-    const result = await tool.handler({ projectFile: tmpFile });
+    const result = (await tool.handler({ projectFile: tmpFile })) as ProjectInfo;
     expect(result.format).toBe("kdenlive");
   });
 });
@@ -169,7 +191,7 @@ describe("kdenliveCompose", () => {
 
   it("renders a color composition to mp4", async () => {
     const tool = await getCompose();
-    const result = await tool.handler({
+    const result = (await tool.handler({
       name: "test-compose",
       profile: { width: 320, height: 240, fps: 24 },
       tracks: [
@@ -179,7 +201,7 @@ describe("kdenliveCompose", () => {
           ],
         },
       ],
-    });
+    })) as ComposeResult;
 
     expect(result.videoPath).toContain("test-compose");
     expect(result.videoPath).toMatch(/\.mp4$/);
