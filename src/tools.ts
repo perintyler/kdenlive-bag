@@ -1,4 +1,4 @@
-import { defineTool } from "@barry/tools";
+import { defineTool } from "@barry-rocks/tools";
 import { z } from "zod";
 import { existsSync, readFileSync, readdirSync, mkdirSync } from "node:fs";
 import { join, resolve, isAbsolute, basename, dirname, extname } from "node:path";
